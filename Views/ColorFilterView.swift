@@ -12,18 +12,18 @@ struct ColorFilterView: View {
     
         var body: some View {
             VStack {
-                if viewModel.loading {
-                    Text("LOADING")
-                }
-                if let image = viewModel.frame {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-//                        .frame(height: 300)
-                        .border(Color.black, width: 1)
-                } else {
-                    Text("xd")
-                }
+//                if viewModel.loading {
+//                    Text("LOADING")
+//                }
+//                if let image = viewModel.frame {
+//                    Image(uiImage: image)
+//                        .resizable()
+//                        .scaledToFit()
+////                        .frame(height: 300)
+//                        .border(Color.black, width: 1)
+//                } else {
+//                    Text("xd")
+//                }
                 
                 Spacer()
                 

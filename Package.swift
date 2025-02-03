@@ -10,7 +10,7 @@ import AppleProductTypes
 let package = Package(
     name: "OpenClimb",
     platforms: [
-        .iOS("16.0")
+        .iOS("18.0")
     ],
     products: [
         .iOSApplication(
@@ -20,7 +20,7 @@ let package = Package(
             teamIdentifier: "FBFGPPRU68",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .asset("AppIcon"),
+            appIcon: .placeholder(icon: .cloud),
             accentColor: .presetColor(.yellow),
             supportedDeviceFamilies: [
                 .pad,

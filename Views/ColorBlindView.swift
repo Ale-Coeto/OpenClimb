@@ -10,16 +10,32 @@ import SwiftUI
 struct ColorBlindView: View {
     @StateObject var colorBlindVM = ColorBlindVM()
     @StateObject var colorFilterVM = FrameHandler()
+    @StateObject private var frameProcessor = FrameProcessor()
+    
+    //    init() {
+    //        // Initialize frameProcessor with the publisher from colorFilterVM
+    //        frameProcessor.setup(framePublisher: colorFilterVM.framePublisher)
+    ////        let frameProcessorInstance = FrameProcessor(framePublisher: colorFilterVM.framePublisher)
+    ////        _frameProcessor = StateObject(wrappedValue: frameProcessorInstance)
+    //    }
+    //    @State private var frameProcessor: FrameProcessor? = nil
     
     var body: some View {
+        
         VStack {
-            if let image = colorFilterVM.frame {
+            
+            if let image = frameProcessor.frame1 {
+                
                 Image(uiImage: image)
                     .resizable()
                     .ignoresSafeArea()
-//                    .scaledToFit()
+                    .id(UUID())
+                //                    .scaledToFit()
             } else {
-                Color(.black)
+                ZStack {
+                    Color(.black)
+                    Text("Setting up")
+                }
             }
         }
         .ignoresSafeArea()
@@ -42,7 +58,7 @@ struct ColorBlindView: View {
                 }
                 .padding()
                 .background(Color("Primary"))
-                    
+                
                 
                 if colorBlindVM.isSetting {
                     Spacer()
@@ -54,13 +70,14 @@ struct ColorBlindView: View {
                         Text("Color: \(colorBlindVM.capturedColor)")
                         Button {
                             colorBlindVM.handleReset()
-                            colorFilterVM.resetColor()
+                            frameProcessor.resetColor()
+                            colorFilterVM.startSession()
                         } label: {
                             Text("Reset")
                         }
                     }
                     .padding(.top)
-                   
+                    
                 }
                 
                 Spacer()
@@ -74,7 +91,7 @@ struct ColorBlindView: View {
                         if !colorBlindVM.isSetting {
                             colorFilterVM.toggleSession()
                         } else {
-                            colorFilterVM.setColor()
+                            frameProcessor.setColor()
                         }
                         colorBlindVM.handleCapture()
                     } label: {
@@ -89,18 +106,26 @@ struct ColorBlindView: View {
                                 .opacity(0.6)
                         }
                     }
-                        
-                        
+                    
+                    
                 }
             }
         }
         .onAppear {
+            
+            
+            //            frameProcessor = FrameProcessor(framePublisher: colorFilterVM.framePublisher)
+            
+            frameProcessor.setup(framePublisher: colorFilterVM.framePublisher)
             colorFilterVM.startSession()
+            //            if frameProcessor == nil {
+            //                            frameProcessor = FrameProcessor(frameHandler: colorFilterVM)
+            //                        }
         }
         .onDisappear {
             colorFilterVM.stopSession()
         }
-       
+        
         
         
     }
