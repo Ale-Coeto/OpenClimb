@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import Combine
 import Vision
-
+import CoreML
 
 class GuideProcessor: ObservableObject {
     @Published var frame: UIImage?
@@ -17,13 +17,24 @@ class GuideProcessor: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private let context = CIContext()
     let poseRequest = DetectHumanBodyPoseRequest()
-    let holdsRequest = CoreMLRequest()
+    var model: CoreMLRequest?
+    
+//     let model = HoldDetector(configuration: MLModelConfiguration())
+    // Create a Core ML request
+//    let request = CoreMLRequest(model: model)
+//    let model = try? HoldDetector(configuration: defaultConfig)
+    
+//    let model = CoreMLModelContainer(model: HoldDetector)
+//    let holdsRequest = CoreMLRequest(model: model)
     @Published var ciImg: CIImage?
     
     
     init() {
         let dummyImage = CIImage(color: .black).cropped(to: CGRect(x: 0, y: 0, width: 1, height: 1))
             _ = context.createCGImage(dummyImage, from: dummyImage.extent)
+        let detector = try? HoldDetector(configuration: MLModelConfiguration())
+        let cont = try? CoreMLModelContainer(model: detector!.model)
+         model = CoreMLRequest(model: cont!)
     }
     
 //    actor PoseProcessor {
@@ -42,6 +53,16 @@ class GuideProcessor: ObservableObject {
                 print(textForSpeech)
             } else {
                 print("No ciimage")
+            }
+        }
+    }
+    
+    @MainActor
+    func getDetections() async {
+        Task {
+            if let img = ciImg, let md = model {
+                let  results = try? await model?.perform(on: ciImg!)
+                print(results ?? " NOP det")
             }
         }
     }

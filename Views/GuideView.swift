@@ -22,6 +22,15 @@ struct GuideView: View {
             
             Button {
                 Task {
+                    await guideProcessor.getDetections()
+                    speech.say(text: guideProcessor.textForSpeech)
+                }
+            } label: {
+                Text("GET Det")
+            }
+            
+            Button {
+                Task {
                     await guideProcessor.getPose()
                     speech.say(text: guideProcessor.textForSpeech)
                 }

@@ -21,7 +21,7 @@ let package = Package(
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .placeholder(icon: .cloud),
-            accentColor: .presetColor(.yellow),
+            accentColor: .presetColor(.green),
             supportedDeviceFamilies: [
                 .pad,
                 .phone
@@ -40,7 +40,11 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AppModule",
-            path: "."
+            path: ".",
+            resources: [
+//                .process("Resources"),
+                .copy("Model/HoldDetector.mlmodelc")
+            ]
         )
     ],
     swiftLanguageVersions: [.version("6")]
