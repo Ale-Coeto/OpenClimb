@@ -11,13 +11,48 @@ import Combine
 import Vision
 import CoreML
 
+class Detection: Identifiable {
+    var id = UUID()
+    var label: String
+    var center: NormalizedPoint
+    var width: CGFloat
+    var height: CGFloat
+    var conf: CGFloat
+    
+    
+    init(label: String, center: NormalizedPoint, width: CGFloat, height: CGFloat, conf: CGFloat) {
+        self.label = label
+        self.center = center
+        self.width = width
+        self.height = height
+        self.conf = conf
+    }
+
+}
+
 class GuideProcessor: ObservableObject {
     @Published var frame: UIImage?
     @Published var textForSpeech: String = ""
+    @Published var detections: [Detection]?
+    @Published var joints: [HumanBodyPoseObservation.PoseJointName : Joint]?
     private var cancellables = Set<AnyCancellable>()
     private let context = CIContext()
     let poseRequest = DetectHumanBodyPoseRequest()
     var model: CoreMLRequest?
+    var armDistance: CGFloat?
+    let bodyConnections: [(HumanBodyPoseObservation.PoseJointName, HumanBodyPoseObservation.PoseJointName)] = [
+        (.rightShoulder, .rightElbow),
+        (.rightElbow, .rightWrist),
+        (.leftShoulder, .leftElbow),
+        (.leftElbow, .leftWrist),
+        (.rightShoulder, .leftShoulder),
+        (.rightHip, .rightKnee),
+        (.rightKnee, .rightAnkle),
+        (.leftHip, .leftKnee),
+        (.leftKnee, .leftAnkle),
+        (.rightHip, .leftHip),
+        (.leftHip, .rightShoulder) // Spine line
+    ]
     
 //     let model = HoldDetector(configuration: MLModelConfiguration())
     // Create a Core ML request
@@ -49,30 +84,95 @@ class GuideProcessor: ObservableObject {
         Task {
             if let img = ciImg {
                 let results = try? await poseRequest.perform(on: img).first
-                textForSpeech = results?.description ?? "No results"
-                print(textForSpeech)
+                if let joints = results?.allJoints() {
+                    processJoints(joints)
+                    print(joints)
+                }
+//                textForSpeech = results?.description ?? "No results"
+                
             } else {
                 print("No ciimage")
             }
         }
+    }
+    func getPointsDistance(_ p1: NormalizedPoint, _ p2: NormalizedPoint) -> CGFloat {
+        return hypot(p2.x - p1.x, p2.y - p1.y) // √((x2 - x1)² + (y2 - y1)²)
+    }
+
+    private func processJoints(_ joints: [HumanBodyPoseObservation.PoseJointName : Joint]) {
+        if let shoulder = joints[.rightShoulder]?.location, let elbow = joints[.rightElbow]?.location, let wrist = joints[.rightWrist]?.location {
+            armDistance = getPointsDistance(shoulder, elbow) + getPointsDistance(elbow, wrist)
+        }
+        self.joints = joints
+    }
+    
+    func makeVisualDescription() {
+        guard let joints = joints, let detections = detections else { return }
+        
+        
     }
     
     @MainActor
     func getDetections() async {
         Task {
             if let img = ciImg, let md = model {
-                let  results = try? await model?.perform(on: ciImg!)
-                print(results ?? " NOP det")
+                if let results = try? await md.perform(on: img) {
+//                    print(results)
+                    detections = convertModelDetections(results)
+                    if let detections {
+                        textForSpeech = "I see \(detections.count) holds"
+                        print("COUNT: ", detections.count)
+                    }
+                    
+                }
             }
         }
     }
     
-    func getPose(_ ciImage: CIImage) async -> CIImage {
-        let results = try? await poseRequest.perform(on: ciImage).first
-        print(results?.description ?? "nop")
-        return ciImage
+     func normalizedToView(_ point: NormalizedPoint, in size: CGSize) -> CGPoint {
+        return CGPoint(x: point.x * size.width, y: (1 - point.y) * size.height) // Flip Y-axis
     }
     
+    func convertModelDetections(_ results: CoreMLRequest.Result) -> [Detection] {
+        var detections: [Detection] = []
+        
+        guard let observations = results as? [RecognizedObjectObservation] else {
+                print("Error: Result is not of type [RecognizedObjectObservation]")
+                return detections
+            }
+//        observations.first.
+
+        for observation in observations {
+            // Use the first label as the primary label
+            if observation.confidence < 0.5 { continue }
+            
+            guard let label = observation.labels.first?.identifier else { continue }
+            print(label)
+
+            let boundingBox = observation.boundingBox.cgRect
+
+            // Convert observation into Detection
+            let detection = Detection(
+                label: label,
+                center: NormalizedPoint(x: boundingBox.midX, y: boundingBox.midY),
+                width: boundingBox.width,
+                height: boundingBox.height,
+                conf: CGFloat(observation.confidence)
+            )
+
+            detections.append(detection)
+        }
+
+        return detections
+    }
+    
+    
+    
+//    func getPose(_ ciImage: CIImage) async -> CIImage {
+//        let results = try? await poseRequest.perform(on: ciImage).first
+//        print(results?.description ?? "nop")
+//        return ciImage
+//    }
     
 
     func setupChain(framePublisher: PassthroughSubject<CIImage, Never>) {
@@ -98,25 +198,25 @@ class GuideProcessor: ObservableObject {
 //                // Make a copy of CIImage for safe async usage
 //                let copiedImage = ciImage.copy() as! CIImage
 //            }
-            .map { [weak self] ciImage -> (UIImage?, CIImage?) in
-                // Extract RGB values
-                guard let self = self else { return (nil, nil) }
-                
-                if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-                    let uiImage = UIImage(cgImage: cgImage)
-                    return (uiImage, ciImage) // Return both UI and CI images
-                }
-                return (nil, ciImage) // Return CIImage and nil if no UIImage could be created
-            }
+            .compactMap(makeUIandCGImage)
+        
             .receive(on: RunLoop.main) // Ensure UI updates happen on the main thread
-            .sink { [weak self] uiImage, ciImage in
-                // Update the published frame
-                self?.ciImg = ciImage
-                self?.frame = uiImage
-//                self?.textForSpeech = "Hello"
-            }
+            .sink(receiveValue: setImages)
 
             .store(in: &cancellables)
+    }
+    
+    private func makeUIandCGImage(_ ciImage: CIImage) -> (UIImage?, CIImage)? {
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            let uiImage = UIImage(cgImage: cgImage)
+            return (uiImage, ciImage) // Return both UI and CI images
+        }
+        return (nil, ciImage)
+    }
+    
+    private func setImages(_ uiImage: UIImage?, _ ciImage: CIImage) {
+        ciImg = ciImage
+        frame = uiImage
     }
     
 

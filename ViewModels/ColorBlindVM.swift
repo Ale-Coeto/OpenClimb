@@ -12,7 +12,9 @@ class ColorBlindVM: ObservableObject {
     @Published var captureLabel: String
     @Published var filterIntensity:Float = 0.9
     @Published var capturedColor: String
-    
+    @Published var helpMode: Bool = true
+    @Published var arrowOffset: CGFloat = 0
+    @Published var helpPageIndex: Int = 0
     
     init() {
         self.isSetting = true
