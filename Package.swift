@@ -20,7 +20,7 @@ let package = Package(
             teamIdentifier: "FBFGPPRU68",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .cloud),
+            appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.green),
             supportedDeviceFamilies: [
                 .pad,
@@ -42,7 +42,6 @@ let package = Package(
             name: "AppModule",
             path: ".",
             resources: [
-//                .process("Resources"),
                 .copy("Model/HoldDetector.mlmodelc")
             ]
         )

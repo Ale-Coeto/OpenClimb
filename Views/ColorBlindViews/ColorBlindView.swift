@@ -55,7 +55,8 @@ struct ColorBlindView: View {
             } else {
                 ZStack {
                     Color(.black)
-                    Text("Setting up")
+                    Text("Loading Image")
+                        .foregroundStyle(.white)
                 }
             }
         }

@@ -9,22 +9,31 @@ import SwiftUI
 
 struct LandingView: View {
     var body: some View {
-        Image(systemName: "square")
-        Text("Open Climb")
-        Button {
-            
+        
+        NavigationStack {
+            Image("Logo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .accessibilityLabel("App Logo: circle with centered mountain")
+                .frame(width: 300)
+        }
+        
+        NavigationLink {
+            IntroView()
         } label: {
             HStack {
                 Text("Get started")
                 Image(systemName: "arrow.right")
             }
             .padding()
-            .background(.blue)
-            .foregroundStyle(.white)
-            .clipShape(.rect(cornerRadius: 15))
-            
+            .background(Color("Secondary"))
+            .foregroundColor(.white)
+            .cornerRadius(15)
         }
-            
+        .padding(.bottom, 100)
+        .accessibilityLabel("Get started button")
+        .accessibilityHint("Navigates to the introduction screen")
+        
     }
 }
 

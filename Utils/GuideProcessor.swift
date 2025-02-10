@@ -40,6 +40,7 @@ class GuideProcessor: ObservableObject {
     let poseRequest = DetectHumanBodyPoseRequest()
     var model: CoreMLRequest?
     var armDistance: CGFloat?
+    var legDistance: CGFloat?
     let bodyConnections: [(HumanBodyPoseObservation.PoseJointName, HumanBodyPoseObservation.PoseJointName)] = [
         (.rightShoulder, .rightElbow),
         (.rightElbow, .rightWrist),
@@ -54,13 +55,18 @@ class GuideProcessor: ObservableObject {
         (.leftHip, .rightShoulder) // Spine line
     ]
     
-//     let model = HoldDetector(configuration: MLModelConfiguration())
-    // Create a Core ML request
-//    let request = CoreMLRequest(model: model)
-//    let model = try? HoldDetector(configuration: defaultConfig)
+    let mainJoints: [HumanBodyPoseObservation.PoseJointName] = [
+        .leftShoulder,
+        .rightShoulder,
+        .leftHip,
+        .rightHip
+    ]
     
-//    let model = CoreMLModelContainer(model: HoldDetector)
-//    let holdsRequest = CoreMLRequest(model: model)
+    var closestHolds: [Int: [HumanBodyPoseObservation.JointName: [Detection]]] = [
+        1: [.leftShoulder: [], .rightShoulder: [], .leftHip: [], .rightHip: []],
+        2: [.leftShoulder: [], .rightShoulder: [], .leftHip: [], .rightHip: []]
+    ]
+
     @Published var ciImg: CIImage?
     
     
@@ -71,14 +77,7 @@ class GuideProcessor: ObservableObject {
         let cont = try? CoreMLModelContainer(model: detector!.model)
          model = CoreMLRequest(model: cont!)
     }
-    
-//    actor PoseProcessor {
-//            func getPose(_ ciImage: CIImage, with poseRequest: DetectHumanBodyPoseRequest) async -> CIImage {
-//                let results = try? await poseRequest.perform(on: ciImage).first
-//                print(results?.description ?? "nop")
-//                return ciImage
-//            }
-//        }
+
     @MainActor
     func getPose() async {
         Task {
@@ -103,14 +102,133 @@ class GuideProcessor: ObservableObject {
         if let shoulder = joints[.rightShoulder]?.location, let elbow = joints[.rightElbow]?.location, let wrist = joints[.rightWrist]?.location {
             armDistance = getPointsDistance(shoulder, elbow) + getPointsDistance(elbow, wrist)
         }
+        
+        if let ankle = joints[.leftAnkle]?.location, let knee = joints[.leftKnee]?.location, let hip = joints[.leftHip]?.location {
+            legDistance = getPointsDistance(ankle, knee) + getPointsDistance(knee, hip)
+        }
         self.joints = joints
     }
     
-    func makeVisualDescription() {
-        guard let joints = joints, let detections = detections else { return }
-        
-        
+    func getDirection(_ pivot: NormalizedPoint, _ hold: NormalizedPoint) -> String {
+        let dx = hold.x - pivot.x
+        let dy = hold.y - pivot.y
+
+        let threshold: CGFloat = 0.1 // Sensitivity for diagonal classification
+
+        if abs(dx) < threshold && dy < 0 {
+            return "top"
+        } else if abs(dx) < threshold && dy > 0 {
+            return "down"
+        } else if abs(dy) < threshold && dx < 0 {
+            return "left"
+        } else if abs(dy) < threshold && dx > 0 {
+            return "right"
+        } else if dx < 0 && dy < 0 {
+            return "top-left"
+        } else if dx > 0 && dy < 0 {
+            return "top-right"
+        } else if dx < 0 && dy > 0 {
+            return "down-left"
+        } else if dx > 0 && dy > 0 {
+            return "down-right"
+        }
+
+        return "unknown"
     }
+
+    
+    func makeVisualDescription() {
+        guard let joints = joints, let detections = detections, let armDistance = armDistance, let legDistance = legDistance else { return }
+
+        let close_reach: CGFloat = 1.2
+        let far_reach: CGFloat = 2.0
+
+        // Predefined main joints for arms and legs
+        let mainJoints: [HumanBodyPoseObservation.PoseJointName] = [
+            .leftShoulder, .rightShoulder, .leftHip, .rightHip
+        ]
+
+        // Define radii dynamically
+        let closeRadius: [HumanBodyPoseObservation.PoseJointName: CGFloat] = [
+            .leftShoulder: armDistance * 2.0,
+            .rightShoulder: armDistance * 2.0,
+            .leftHip: legDistance * 1.5,
+            .rightHip: legDistance * 1.5
+        ]
+
+        let farRadius: [HumanBodyPoseObservation.PoseJointName: CGFloat] = [
+            .leftShoulder: armDistance * 3.0,
+            .rightShoulder: armDistance * 3.0,
+            .leftHip: legDistance * 2.0,
+            .rightHip: legDistance * 2.0
+        ]
+
+        // Initialize closest holds storage
+        closestHolds = [
+            1: [.leftShoulder: [], .rightShoulder: [], .leftHip: [], .rightHip: []],
+            2: [.leftShoulder: [], .rightShoulder: [], .leftHip: [], .rightHip: []]
+        ]
+
+        // Ensure we have valid joint positions
+        var jointPositions: [HumanBodyPoseObservation.PoseJointName: NormalizedPoint] = [:]
+        for joint in mainJoints {
+            if let location = joints[joint]?.location {
+                jointPositions[joint] = location
+            }
+        }
+
+        // Process each detection and categorize it
+        for detection in detections {
+            let holdCenter = detection.center
+
+            var closestJoint: HumanBodyPoseObservation.PoseJointName?
+            var closestDistance: CGFloat = .greatestFiniteMagnitude
+            var closestZone: Int = 2 // Default to "far" zone
+
+            for joint in mainJoints {
+                guard let jointPos = jointPositions[joint] else { continue }
+
+                let distance = getPointsDistance(holdCenter, jointPos)
+
+                if distance <= closeRadius[joint]!, distance < closestDistance {
+                    closestJoint = joint
+                    closestDistance = distance
+                    closestZone = 1 // Closest hold should be in zone 1
+                } else if distance <= farRadius[joint]!, distance < closestDistance {
+                    closestJoint = joint
+                    closestDistance = distance
+                    closestZone = 2 // Otherwise, assign to zone 2
+                }
+            }
+
+            // Add to closest joint only
+            if let closestJoint = closestJoint {
+                closestHolds[closestZone]?[closestJoint]?.append(detection)
+            }
+        }
+
+        // Generate text descriptions dynamically
+        textForSpeech = ""
+        
+        for joint in mainJoints {
+            if let closeHolds = closestHolds[1]?[joint], !closeHolds.isEmpty {
+                for hold in closeHolds {
+                    textForSpeech += "There is a hold \(getDirection(jointPositions[joint]!, hold.center)) of your \(jointDescription(joint)). "
+                }
+            }
+        }
+    }
+    
+    func jointDescription(_ joint: HumanBodyPoseObservation.PoseJointName) -> String {
+        switch joint {
+            case .leftShoulder: return "left arm"
+            case .rightShoulder: return "right arm"
+            case .leftHip: return "left leg"
+            case .rightHip: return "right leg"
+            default: return "body"
+        }
+    }
+
     
     @MainActor
     func getDetections() async {
@@ -125,6 +243,8 @@ class GuideProcessor: ObservableObject {
                     }
                     
                 }
+            } else {
+                textForSpeech = ""
             }
         }
     }
@@ -179,25 +299,6 @@ class GuideProcessor: ObservableObject {
 //        let poseProcessor = PoseProcessor()
         framePublisher
             
-//            .flatMap { ciImage in
-//                // Create a copy of `ciImage` to make it Sendable
-//                let ciImageCopy = ciImage.copy() as! CIImage
-//                let cgImage - context.createCGImage((ciImage), from: ciImage.extent)
-//                    
-//                return Future<CIImage, Never> { [weak self] promise in
-//                                    guard let self = self else { return }
-//                    Task { @MainActor in
-//                                        // Call the async function with the copied `ciImage`
-//                                        let processedImage = await self.getPose(ciImageCopy)
-//                                        promise(.success(processedImage))
-//                                    }
-//                                }
-//                
-//            }
-//            .map { [weak self] ciImage in
-//                // Make a copy of CIImage for safe async usage
-//                let copiedImage = ciImage.copy() as! CIImage
-//            }
             .compactMap(makeUIandCGImage)
         
             .receive(on: RunLoop.main) // Ensure UI updates happen on the main thread
