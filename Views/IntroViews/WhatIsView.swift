@@ -8,11 +8,31 @@
 import SwiftUI
 
 struct WhatIsView: View {
+    @ObservedObject var vm: IntroViewVM
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Image("Logo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 100)
+            
+            Text("What is OpenClimb?")
+                .padding()
+                .fontWeight(.semibold)
+                .foregroundStyle(Color("Text"))
+            
+            
+            Text("Open climb is an app design to provide tools for visually impaired people who want to try climbing or are looking for more independence when practicing the sport indoors.")
+                .padding()
+            
+            ArrowView(vm: vm)
+                .padding(.top)
+            
+        }
     }
 }
 
 #Preview {
-    WhatIsView()
+    WhatIsView(vm: IntroViewVM())
 }

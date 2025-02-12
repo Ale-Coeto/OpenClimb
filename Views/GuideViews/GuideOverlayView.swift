@@ -10,6 +10,7 @@ import SwiftUI
 struct GuideOverlayView: View {
     @ObservedObject var guideProcessor: GuideProcessor
     @ObservedObject var frameHandler: FrameHandler
+//    @ObservedObject var speech: Speech
     @StateObject var vm = GuideVM()
     
     var body: some View {
@@ -36,23 +37,25 @@ struct GuideOverlayView: View {
                 
                 Spacer()
                 
+                Text(guideProcessor.textForSpeech)
+                
                 Button {
                     Task {
-                        await guideProcessor.getDetections()
-                        //                    speech.say(text: guideProcessor.textForSpeech)
+                        await guideProcessor.process()
+
                     }
                 } label: {
                     Text("GET Det")
                 }
                 //
-                Button {
-                    Task {
-                        await guideProcessor.getPose()
-                        //                    speech.say(text: guideProcessor.textForSpeech)
-                    }
-                } label: {
-                    Text("GET POSE")
-                }
+//                Button {
+//                    Task {
+//                        await guideProcessor.getPose()
+//                        //                    speech.say(text: guideProcessor.textForSpeech)
+//                    }
+//                } label: {
+//                    Text("GET POSE")
+//                }
             }
             if vm.helpMode {
                 GuideHelpView(vm: vm)

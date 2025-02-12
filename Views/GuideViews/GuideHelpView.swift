@@ -16,7 +16,6 @@ struct GuideHelpView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.white.opacity(0.8))
                 .ignoresSafeArea()
-                .ignoresSafeArea()
             
             VStack {
                 TabView (selection: $vm.helpPageIndex) {

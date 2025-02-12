@@ -35,6 +35,7 @@ class GuideProcessor: ObservableObject {
     @Published var textForSpeech: String = ""
     @Published var detections: [Detection]?
     @Published var joints: [HumanBodyPoseObservation.PoseJointName : Joint]?
+    var speech = Speech()
     private var cancellables = Set<AnyCancellable>()
     private let context = CIContext()
     let poseRequest = DetectHumanBodyPoseRequest()
@@ -77,15 +78,62 @@ class GuideProcessor: ObservableObject {
         let cont = try? CoreMLModelContainer(model: detector!.model)
          model = CoreMLRequest(model: cont!)
     }
+    
+    @MainActor
+    func processAll() async {
+        await getDetections()  // Step 1: Get detections
+        await getPose()        // Step 2: Get pose data
 
+        // Step 3: Ensure description is updated after detections & pose are ready
+        DispatchQueue.main.async {
+                self.makeVisualDescription() // Now updates in sync with UI
+                print("SPEECH: ", self.textForSpeech)
+                
+                // Step 4: Trigger speech immediately after text updates
+            self.speech.say(text: self.textForSpeech)
+            }
+//        makeVisualDescription()
+        print("Result: ", textForSpeech)
+    }
+    
+    @MainActor
+    func process() async {
+        Task {
+            if let img = ciImg {
+                self.joints = nil
+                
+                let results = try? await poseRequest.perform(on: img).first
+                if let joints = results?.allJoints() {
+                    processJoints(joints)
+//                    print("Joints: ", joints)
+                }
+                
+                if let md = model {
+                    if let results = try? await md.perform(on: img) {
+                        //                    print(results)
+                        detections = convertModelDetections(results)
+                    }
+                }
+                
+                makeVisualDescription()
+                speech.say(text: textForSpeech)
+//                textForSpeech = results?.description ?? "No results"
+                
+            } else {
+                print("No ciimage")
+            }
+        }
+    }
+    
     @MainActor
     func getPose() async {
         Task {
             if let img = ciImg {
+                self.joints = nil
                 let results = try? await poseRequest.perform(on: img).first
                 if let joints = results?.allJoints() {
                     processJoints(joints)
-                    print(joints)
+//                    print("Joints: ", joints)
                 }
 //                textForSpeech = results?.description ?? "No results"
                 
@@ -116,21 +164,21 @@ class GuideProcessor: ObservableObject {
         let threshold: CGFloat = 0.1 // Sensitivity for diagonal classification
 
         if abs(dx) < threshold && dy < 0 {
-            return "top"
+            return "above"
         } else if abs(dx) < threshold && dy > 0 {
-            return "down"
+            return "below"
         } else if abs(dy) < threshold && dx < 0 {
-            return "left"
+            return "to the left"
         } else if abs(dy) < threshold && dx > 0 {
-            return "right"
+            return "to the right"
         } else if dx < 0 && dy < 0 {
-            return "top-left"
+            return "above to the left"
         } else if dx > 0 && dy < 0 {
-            return "top-right"
+            return "above to the right"
         } else if dx < 0 && dy > 0 {
-            return "down-left"
+            return "below to the left"
         } else if dx > 0 && dy > 0 {
-            return "down-right"
+            return "below to the right"
         }
 
         return "unknown"
@@ -138,7 +186,18 @@ class GuideProcessor: ObservableObject {
 
     
     func makeVisualDescription() {
-        guard let joints = joints, let detections = detections, let armDistance = armDistance, let legDistance = legDistance else { return }
+        textForSpeech = ""
+        guard let detections = detections else {
+            print("No detections")
+            textForSpeech = "No holds detected"
+            return
+        }
+        
+        guard let joints = joints, let armDistance = armDistance, let legDistance = legDistance else {
+            print("No joints, detections or distance")
+            textForSpeech = "No person detected"
+            return
+        }
 
         let close_reach: CGFloat = 1.2
         let far_reach: CGFloat = 2.0
@@ -217,6 +276,23 @@ class GuideProcessor: ObservableObject {
                 }
             }
         }
+        
+        if textForSpeech == "" {
+            for joint in mainJoints {
+                if let closeHolds = closestHolds[1]?[joint], !closeHolds.isEmpty {
+                    for hold in closeHolds {
+                        textForSpeech += "There is a hold far \(getDirection(jointPositions[joint]!, hold.center)) of your \(jointDescription(joint)). "
+                    }
+                }
+            }
+            
+        }
+        
+        if textForSpeech == "" {
+            textForSpeech = "No near holds detected, try moving to a different position"
+        }
+        
+        print("SPEECH: ", textForSpeech)
     }
     
     func jointDescription(_ joint: HumanBodyPoseObservation.PoseJointName) -> String {
@@ -237,10 +313,10 @@ class GuideProcessor: ObservableObject {
                 if let results = try? await md.perform(on: img) {
 //                    print(results)
                     detections = convertModelDetections(results)
-                    if let detections {
-                        textForSpeech = "I see \(detections.count) holds"
-                        print("COUNT: ", detections.count)
-                    }
+//                    if let detections {
+//                        textForSpeech = "I see \(detections.count) holds"
+//                        print("COUNT: ", detections.count)
+//                    }
                     
                 }
             } else {

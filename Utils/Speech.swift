@@ -9,7 +9,7 @@ import Foundation
 import Foundation
 import AVFoundation
 
-class Speech: ObservableObject {
+class Speech {
     let synthesizer = AVSpeechSynthesizer()
     
     func say(text: String) {
@@ -22,6 +22,7 @@ class Speech: ObservableObject {
         utterance.postUtteranceDelay = 0.2
         utterance.volume = 1
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+//        utterance.rate = 0.5
         
         // Retrieve the British English voice.
         let voice = AVSpeechSynthesisVoice(language: "en-US")
