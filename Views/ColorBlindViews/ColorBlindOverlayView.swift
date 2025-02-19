@@ -9,12 +9,13 @@ import SwiftUI
 
 struct ColorBlindOverlayView: View {
     @ObservedObject var vm: ColorBlindVM
-    @ObservedObject var frameProcessor: ColorBlindProcessor
+    @ObservedObject var colorBlindProcessor: ColorBlindProcessor
     @ObservedObject var frameHandler: FrameHandler
     
     var body: some View {
         ZStack {
             VStack {
+                
                 // Header
                 HStack {
                     Text("Color Blind Mode")
@@ -37,48 +38,30 @@ struct ColorBlindOverlayView: View {
                 
                 
                 if vm.isSetting {
-                    HStack (alignment: .center) {
-                        Text("Color: \(closestColorName(for: frameProcessor.centerColor))")
-                            .foregroundStyle(.white)
-                        Rectangle()
-                            .fill(
-                                Color(
-                                    red: Double(frameProcessor.centerColor?.red ?? 0) / 255.0,
-                                    green: Double(frameProcessor.centerColor?.green ?? 0) / 255.0,
-                                    blue: Double(frameProcessor.centerColor?.blue ?? 0) / 255.0
-                                )
-                            )
-                            .frame(width: 10, height: 10)
-                    }
+                    DetectedColorView(color: colorBlindProcessor.centerColor)
                     Spacer()
-//                        Spacer()
-//                        Text("|")
-//                        Text("- -")
-//                        Text("|")
+
                 } else {
                     VStack {
-                        HStack (alignment: .center) {
-                            Text("Color: \(closestColorName(for: frameProcessor.filterColor!))")
-                                .foregroundStyle(.white)
-                            Rectangle()
-                                .fill(
-                                    Color(
-                                        red: Double(frameProcessor.filterColor?.red ?? 0) / 255.0,
-                                        green: Double(frameProcessor.filterColor?.green ?? 0) / 255.0,
-                                        blue: Double(frameProcessor.filterColor?.blue ?? 0) / 255.0
-                                    )
-                                )
-                                .frame(width: 10, height: 10)
-                        }
-                        Spacer()
-                        Text("Color: \(vm.capturedColor)")
+                        DetectedColorView(color: colorBlindProcessor.filterColor)
+                        
+                        
                         Button {
                             vm.handleReset()
-                            frameProcessor.resetColor()
+                            colorBlindProcessor.resetColor()
                             frameHandler.startSession()
                         } label: {
-                            Text("Reset")
+                            HStack {
+                                Image(systemName: "arrow.trianglehead.counterclockwise")
+                                Text("Reset")
+                            }
+                            .padding()
+                            .background(Color("Secondary"))
+                            .foregroundColor(.white)
+                            .cornerRadius(15)
                         }
+                        
+                        Spacer()
                     }
                     .padding(.top)
                     
@@ -95,7 +78,7 @@ struct ColorBlindOverlayView: View {
                         if !vm.isSetting {
                             frameHandler.toggleSession()
                         } else {
-                            frameProcessor.setColor()
+                            colorBlindProcessor.setColor()
                         }
                         vm.handleCapture()
                     } label: {
@@ -124,5 +107,5 @@ struct ColorBlindOverlayView: View {
 }
 
 #Preview {
-    ColorBlindOverlayView(vm: ColorBlindVM(), frameProcessor: ColorBlindProcessor(), frameHandler: FrameHandler())
+    ColorBlindOverlayView(vm: ColorBlindVM(), colorBlindProcessor: ColorBlindProcessor(), frameHandler: FrameHandler())
 }

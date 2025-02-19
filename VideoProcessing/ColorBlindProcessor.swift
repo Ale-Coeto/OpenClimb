@@ -25,16 +25,6 @@ class ColorBlindProcessor: ObservableObject {
         
     }
     
-    func setColor() {
-        filterColor = centerColor
-        useFilter = true
-    }
-    
-    func resetColor() {
-        filterColor = nil
-        useFilter = false
-    }
-    
     func setup(framePublisher: PassthroughSubject<CIImage, Never>) {
         framePublisher
             .compactMap(makeCGImage)
@@ -77,42 +67,18 @@ class ColorBlindProcessor: ObservableObject {
         return uiImage
     }
     
+    func setColor() {
+        filterColor = centerColor
+        useFilter = true
+    }
+    
+    func resetColor() {
+        filterColor = nil
+        useFilter = false
+    }
+    
     private func setImage(_ uiImage: UIImage) {
         frame1 = uiImage
-    }
-    
-    
-    func applyCustomKernel(image: CIImage, redThreshold: Float, greenThreshold: Float, blueThreshold: Float) -> CIImage? {
-        let normalizedRedThreshold = redThreshold / 255.0
-        let normalizedGreenThreshold = greenThreshold / 255.0
-        let normalizedBlueThreshold = blueThreshold / 255.0
-        let arguments: [Any] = [image, normalizedRedThreshold, normalizedGreenThreshold, normalizedBlueThreshold]
-        let outputImage = kernel!.apply(extent: image.extent, arguments: arguments)
-        return outputImage
-    }
-    
-    
-    func getCenterRGBValues(from cgImage: CGImage) -> (red: UInt8, green: UInt8, blue: UInt8)? {
-        let width = cgImage.width
-        let height = cgImage.height
-        let bytesPerPixel = 4 // Assuming RGBA
-        let bytesPerRow = cgImage.bytesPerRow
-        let centerX = width / 2
-        let centerY = height / 2
-        
-        guard let dataProvider = cgImage.dataProvider,
-              let pixelData = dataProvider.data else {
-            print("Failed to access pixel data.")
-            return nil
-        }
-        
-        let dataPointer = CFDataGetBytePtr(pixelData)
-        let offset = (centerY * bytesPerRow) + (centerX * bytesPerPixel)
-        let red = dataPointer![offset]
-        let green = dataPointer![offset + 1]
-        let blue = dataPointer![offset + 2]
-        
-        return (red: red, green: green, blue: blue)
     }
     
     func setSamplingRectangle(for cgImage: CGImage, regionSize: Int = 20) {
@@ -134,6 +100,40 @@ class ColorBlindProcessor: ObservableObject {
             height: endY - startY
         )
     }
+    
+    func applyCustomKernel(image: CIImage, redThreshold: Float, greenThreshold: Float, blueThreshold: Float) -> CIImage? {
+        let normalizedRedThreshold = redThreshold / 255.0
+        let normalizedGreenThreshold = greenThreshold / 255.0
+        let normalizedBlueThreshold = blueThreshold / 255.0
+        let arguments: [Any] = [image, normalizedRedThreshold, normalizedGreenThreshold, normalizedBlueThreshold]
+        let outputImage = kernel!.apply(extent: image.extent, arguments: arguments)
+        return outputImage
+    }
+    
+    //    func getCenterRGBValues(from cgImage: CGImage) -> (red: UInt8, green: UInt8, blue: UInt8)? {
+    //        let width = cgImage.width
+    //        let height = cgImage.height
+    //        let bytesPerPixel = 4 // Assuming RGBA
+    //        let bytesPerRow = cgImage.bytesPerRow
+    //        let centerX = width / 2
+    //        let centerY = height / 2
+    //
+    //        guard let dataProvider = cgImage.dataProvider,
+    //              let pixelData = dataProvider.data else {
+    //            print("Failed to access pixel data.")
+    //            return nil
+    //        }
+    //
+    //        let dataPointer = CFDataGetBytePtr(pixelData)
+    //        let offset = (centerY * bytesPerRow) + (centerX * bytesPerPixel)
+    //        let red = dataPointer![offset]
+    //        let green = dataPointer![offset + 1]
+    //        let blue = dataPointer![offset + 2]
+    //
+    //        return (red: red, green: green, blue: blue)
+    //    }
+    //
+    
     
     
     func getAverageRGBValues(from cgImage: CGImage) -> (red: UInt8, green: UInt8, blue: UInt8)? {
@@ -179,6 +179,6 @@ class ColorBlindProcessor: ObservableObject {
         
         return (red: avgRed, green: avgGreen, blue: avgBlue)
     }
-
+    
 }
 

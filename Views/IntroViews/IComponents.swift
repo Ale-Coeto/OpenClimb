@@ -7,6 +7,28 @@
 
 import SwiftUI
 
+struct ToolView: View {
+    var image: String
+    var label: String
+    var color: Color
+    
+    var body: some View {
+        HStack {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(color)
+                    .frame(width: 40, height: 40)
+                    
+                Image(systemName: image)
+                    .foregroundStyle(.white)
+            }
+            .padding(.trailing, 5)
+            
+            Text(label)
+        }
+    }
+}
+
 struct ArrowView: View {
     @ObservedObject var vm: IntroViewVM
     
@@ -28,13 +50,10 @@ struct ArrowView: View {
                     vm.pageIndex = (vm.pageIndex + 1)
                 }
             }
-            .onAppear {
-                vm.arrowOffset = 0
-            }
             
     }
 }
 
 #Preview {
-    ArrowView(vm: IntroViewVM())
+    ToolView(image: "square.and.arrow.up", label: " ", color: Color(.blue))
 }

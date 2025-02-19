@@ -11,30 +11,12 @@ import Combine
 import Vision
 import CoreML
 
-class Detection: Identifiable {
-    var id = UUID()
-    var label: String
-    var center: NormalizedPoint
-    var width: CGFloat
-    var height: CGFloat
-    var conf: CGFloat
-    
-    
-    init(label: String, center: NormalizedPoint, width: CGFloat, height: CGFloat, conf: CGFloat) {
-        self.label = label
-        self.center = center
-        self.width = width
-        self.height = height
-        self.conf = conf
-    }
-
-}
-
 class GuideProcessor: ObservableObject {
     @Published var frame: UIImage?
     @Published var textForSpeech: String = ""
     @Published var detections: [Detection]?
     @Published var joints: [HumanBodyPoseObservation.PoseJointName : Joint]?
+    
     var speech = Speech()
     private var cancellables = Set<AnyCancellable>()
     private let context = CIContext()
@@ -42,26 +24,6 @@ class GuideProcessor: ObservableObject {
     var model: CoreMLRequest?
     var armDistance: CGFloat?
     var legDistance: CGFloat?
-    let bodyConnections: [(HumanBodyPoseObservation.PoseJointName, HumanBodyPoseObservation.PoseJointName)] = [
-        (.rightShoulder, .rightElbow),
-        (.rightElbow, .rightWrist),
-        (.leftShoulder, .leftElbow),
-        (.leftElbow, .leftWrist),
-        (.rightShoulder, .leftShoulder),
-        (.rightHip, .rightKnee),
-        (.rightKnee, .rightAnkle),
-        (.leftHip, .leftKnee),
-        (.leftKnee, .leftAnkle),
-        (.rightHip, .leftHip),
-        (.leftHip, .rightShoulder) // Spine line
-    ]
-    
-    let mainJoints: [HumanBodyPoseObservation.PoseJointName] = [
-        .leftShoulder,
-        .rightShoulder,
-        .leftHip,
-        .rightHip
-    ]
     
     var closestHolds: [Int: [HumanBodyPoseObservation.JointName: [Detection]]] = [
         1: [.leftShoulder: [], .rightShoulder: [], .leftHip: [], .rightHip: []],
@@ -79,23 +41,43 @@ class GuideProcessor: ObservableObject {
          model = CoreMLRequest(model: cont!)
     }
     
-    @MainActor
-    func processAll() async {
-        await getDetections()  // Step 1: Get detections
-        await getPose()        // Step 2: Get pose data
-
-        // Step 3: Ensure description is updated after detections & pose are ready
-        DispatchQueue.main.async {
-                self.makeVisualDescription() // Now updates in sync with UI
-                print("SPEECH: ", self.textForSpeech)
-                
-                // Step 4: Trigger speech immediately after text updates
-            self.speech.say(text: self.textForSpeech)
-            }
-//        makeVisualDescription()
-        print("Result: ", textForSpeech)
+    func setupChain(framePublisher: PassthroughSubject<CIImage, Never>) {
+        framePublisher
+            .compactMap(makeUIandCGImage)
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: setImages)
+            .store(in: &cancellables)
     }
     
+    private func makeUIandCGImage(_ ciImage: CIImage) -> (UIImage?, CIImage)? {
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            let uiImage = UIImage(cgImage: cgImage)
+            return (uiImage, ciImage) // Return both UI and CI images
+        }
+        return (nil, ciImage)
+    }
+    
+    private func setImages(_ uiImage: UIImage?, _ ciImage: CIImage) {
+        ciImg = ciImage
+        frame = uiImage
+    }
+//    @MainActor
+//    func processAll() async {
+//        await getDetections()  // Step 1: Get detections
+//        await getPose()        // Step 2: Get pose data
+//
+//        // Step 3: Ensure description is updated after detections & pose are ready
+//        DispatchQueue.main.async {
+//                self.makeVisualDescription() // Now updates in sync with UI
+//                print("SPEECH: ", self.textForSpeech)
+//                
+//                // Step 4: Trigger speech immediately after text updates
+//            self.speech.say(text: self.textForSpeech)
+//            }
+////        makeVisualDescription()
+//        print("Result: ", textForSpeech)
+//    }
+//    
     @MainActor
     func process() async {
         Task {
@@ -124,24 +106,25 @@ class GuideProcessor: ObservableObject {
             }
         }
     }
+//    
+//    @MainActor
+//    func getPose() async {
+//        Task {
+//            if let img = ciImg {
+//                self.joints = nil
+//                let results = try? await poseRequest.perform(on: img).first
+//                if let joints = results?.allJoints() {
+//                    processJoints(joints)
+////                    print("Joints: ", joints)
+//                }
+////                textForSpeech = results?.description ?? "No results"
+//                
+//            } else {
+//                print("No ciimage")
+//            }
+//        }
+//    }
     
-    @MainActor
-    func getPose() async {
-        Task {
-            if let img = ciImg {
-                self.joints = nil
-                let results = try? await poseRequest.perform(on: img).first
-                if let joints = results?.allJoints() {
-                    processJoints(joints)
-//                    print("Joints: ", joints)
-                }
-//                textForSpeech = results?.description ?? "No results"
-                
-            } else {
-                print("No ciimage")
-            }
-        }
-    }
     func getPointsDistance(_ p1: NormalizedPoint, _ p2: NormalizedPoint) -> CGFloat {
         return hypot(p2.x - p1.x, p2.y - p1.y) // √((x2 - x1)² + (y2 - y1)²)
     }
@@ -199,8 +182,10 @@ class GuideProcessor: ObservableObject {
             return
         }
 
-        let close_reach: CGFloat = 1.2
-        let far_reach: CGFloat = 2.0
+        let close_arm_reach: CGFloat = 2.0
+        let close_leg_reach: CGFloat = 1.5
+        let far_arm_reach: CGFloat = 3.0
+        let far_leg_reach: CGFloat = 2.0
 
         // Predefined main joints for arms and legs
         let mainJoints: [HumanBodyPoseObservation.PoseJointName] = [
@@ -209,17 +194,17 @@ class GuideProcessor: ObservableObject {
 
         // Define radii dynamically
         let closeRadius: [HumanBodyPoseObservation.PoseJointName: CGFloat] = [
-            .leftShoulder: armDistance * 2.0,
-            .rightShoulder: armDistance * 2.0,
-            .leftHip: legDistance * 1.5,
-            .rightHip: legDistance * 1.5
+            .leftShoulder: armDistance * close_arm_reach,
+            .rightShoulder: armDistance * close_arm_reach,
+            .leftHip: legDistance * close_leg_reach,
+            .rightHip: legDistance * close_leg_reach
         ]
 
         let farRadius: [HumanBodyPoseObservation.PoseJointName: CGFloat] = [
-            .leftShoulder: armDistance * 3.0,
-            .rightShoulder: armDistance * 3.0,
-            .leftHip: legDistance * 2.0,
-            .rightHip: legDistance * 2.0
+            .leftShoulder: armDistance * far_arm_reach,
+            .rightShoulder: armDistance * far_arm_reach,
+            .leftHip: legDistance * far_leg_reach,
+            .rightHip: legDistance * far_leg_reach
         ]
 
         // Initialize closest holds storage
@@ -299,31 +284,31 @@ class GuideProcessor: ObservableObject {
         switch joint {
             case .leftShoulder: return "left arm"
             case .rightShoulder: return "right arm"
-            case .leftHip: return "left leg"
-            case .rightHip: return "right leg"
+            case .leftHip: return "left foot"
+            case .rightHip: return "right foot"
             default: return "body"
         }
     }
 
     
-    @MainActor
-    func getDetections() async {
-        Task {
-            if let img = ciImg, let md = model {
-                if let results = try? await md.perform(on: img) {
-//                    print(results)
-                    detections = convertModelDetections(results)
-//                    if let detections {
-//                        textForSpeech = "I see \(detections.count) holds"
-//                        print("COUNT: ", detections.count)
-//                    }
-                    
-                }
-            } else {
-                textForSpeech = ""
-            }
-        }
-    }
+//    @MainActor
+//    func getDetections() async {
+//        Task {
+//            if let img = ciImg, let md = model {
+//                if let results = try? await md.perform(on: img) {
+////                    print(results)
+//                    detections = convertModelDetections(results)
+////                    if let detections {
+////                        textForSpeech = "I see \(detections.count) holds"
+////                        print("COUNT: ", detections.count)
+////                    }
+//                    
+//                }
+//            } else {
+//                textForSpeech = ""
+//            }
+//        }
+//    }
     
      func normalizedToView(_ point: NormalizedPoint, in size: CGSize) -> CGPoint {
         return CGPoint(x: point.x * size.width, y: (1 - point.y) * size.height) // Flip Y-axis
@@ -371,30 +356,7 @@ class GuideProcessor: ObservableObject {
 //    }
     
 
-    func setupChain(framePublisher: PassthroughSubject<CIImage, Never>) {
-//        let poseProcessor = PoseProcessor()
-        framePublisher
-            
-            .compactMap(makeUIandCGImage)
-        
-            .receive(on: RunLoop.main) // Ensure UI updates happen on the main thread
-            .sink(receiveValue: setImages)
-
-            .store(in: &cancellables)
-    }
     
-    private func makeUIandCGImage(_ ciImage: CIImage) -> (UIImage?, CIImage)? {
-        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-            let uiImage = UIImage(cgImage: cgImage)
-            return (uiImage, ciImage) // Return both UI and CI images
-        }
-        return (nil, ciImage)
-    }
-    
-    private func setImages(_ uiImage: UIImage?, _ ciImage: CIImage) {
-        ciImg = ciImage
-        frame = uiImage
-    }
     
 
     

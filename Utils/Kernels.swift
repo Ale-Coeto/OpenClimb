@@ -2,7 +2,7 @@
 //  File.swift
 //  OpenClimb
 //
-//  Created by Alejandra Coeto on 29/01/25.
+//  Created by Alejandra Coeto on 03/02/25.
 //
 
 import Foundation

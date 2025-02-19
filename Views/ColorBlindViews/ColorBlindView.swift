@@ -10,14 +10,14 @@ import SwiftUI
 struct ColorBlindView: View {
     @StateObject var vm = ColorBlindVM()
     @StateObject var frameHandler = FrameHandler()
-    @StateObject private var frameProcessor = ColorBlindProcessor()
+    @StateObject private var colorBlindProcessor = ColorBlindProcessor()
 //    @State var sheet = true
     
     var body: some View {
         
         VStack {
             
-            if let image = frameProcessor.frame1 {
+            if let image = colorBlindProcessor.frame1 {
                 GeometryReader { geometry in
                     ZStack {
                         Image(uiImage: image)
@@ -25,7 +25,7 @@ struct ColorBlindView: View {
                             .ignoresSafeArea()
                             .id(UUID())
                         
-                        if let rect = frameProcessor.samplingRectangle {
+                        if vm.isSetting, let rect = colorBlindProcessor.samplingRectangle {
                             let imageSize = CGSize(
                                 width: image.cgImage?.width ?? 1,
                                 height: image.cgImage?.height ?? 1
@@ -63,10 +63,10 @@ struct ColorBlindView: View {
         .blur(radius: vm.helpMode ? 10 : 0)
         .ignoresSafeArea()
         .overlay() {
-            ColorBlindOverlayView(vm: vm, frameProcessor: frameProcessor, frameHandler: frameHandler)
+            ColorBlindOverlayView(vm: vm, colorBlindProcessor: colorBlindProcessor, frameHandler: frameHandler)
         }
         .onAppear {
-            frameProcessor.setup(framePublisher: frameHandler.framePublisher)
+            colorBlindProcessor.setup(framePublisher: frameHandler.framePublisher)
             frameHandler.startSession()
         }
         .onDisappear {

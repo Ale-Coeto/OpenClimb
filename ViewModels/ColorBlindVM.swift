@@ -2,7 +2,7 @@
 //  File.swift
 //  OpenClimb
 //
-//  Created by Alejandra Coeto on 29/01/25.
+//  Created by Alejandra Coeto on 03/02/25.
 //
 
 import Foundation
@@ -10,18 +10,19 @@ import Foundation
 class ColorBlindVM: ObservableObject {
     @Published var isSetting: Bool
     @Published var captureLabel: String
-    @Published var filterIntensity:Float = 0.9
     @Published var capturedColor: String
-    @Published var helpMode: Bool = true
-    @Published var arrowOffset: CGFloat = 0
-    @Published var helpPageIndex: Int = 0
+    @Published var helpMode: Bool
+    @Published var arrowOffset: CGFloat
+    @Published var helpPageIndex: Int
     
     init() {
         self.isSetting = true
         self.captureLabel = "Set starting hold"
         self.capturedColor = ""
+        self.arrowOffset = 0
+        self.helpPageIndex = 0
+        self.helpMode = true
     }
-    
     
     func handleCapture() {
         if isSetting {
@@ -37,7 +38,5 @@ class ColorBlindVM: ObservableObject {
         isSetting = true
         captureLabel = "Set starting hold"
     }
-    
-    
     
 }

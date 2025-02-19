@@ -10,20 +10,33 @@ import SwiftUI
 struct TechView: View {
     var body: some View {
         VStack {
-            Text("Main tools used")
+            Text("Main frameworks used")
                 .padding()
                 .foregroundStyle(Color("Text"))
                 .fontWeight(.semibold)
                 .font(.title3)
             
-            VStack {
-                ToolView(image: "Idk", label: "Vision")
+            VStack (alignment: .leading) {
+                ToolView(image: "visionpro", label: "Vision", color: Color(.blue))
+                ToolView(image: "waveform.path.ecg", label: "CreateML/CoreML", color: Color(.mint))
+                ToolView(image: "mic", label: "AVFoundation", color: Color(.green))
+                ToolView(image: "photo", label: "CoreImage", color: Color(.yellow))
+                ToolView(image: "arrow.triangle.2.circlepath", label: "Combine", color: Color(.orange))
+                ToolView(image: "square.grid.2x2", label: "UIKit", color: Color(.red))
+                ToolView(image: "r.circle", label: "Roboflow", color: Color(.purple))
             }
             
             NavigationLink {
                 HomeView()
             } label: {
-                Text("Check it out!")
+                HStack {
+                    Text("Get started")
+                    Image(systemName: "arrow.right")
+                }
+                .padding()
+                .background(Color("Secondary"))
+                .foregroundColor(.white)
+                .cornerRadius(15)
             }
         }
     }

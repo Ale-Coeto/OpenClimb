@@ -34,7 +34,7 @@ struct GuideView: View {
                             }
 
                             // Draw connections
-                            for (joint1, joint2) in guideProcessor.bodyConnections {
+                            for (joint1, joint2) in bodyConnections {
                                 if let p1 = joints[joint1]?.location, let p2 = joints[joint2]?.location {
                                     let start = guideProcessor.normalizedToView(p1, in: size)
                                     let end = guideProcessor.normalizedToView(p2, in: size)
@@ -50,7 +50,7 @@ struct GuideView: View {
                             }
 
                             // Draw joint circles
-                            let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * size.width
+//                            let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * size.width
                             for (joint, point) in joints {
                                 let position = guideProcessor.normalizedToView(point.location, in: size)
                                 context.fill(
@@ -58,11 +58,13 @@ struct GuideView: View {
                                     with: .color(.red)
                                 )
                                 
+                                let viewDiagonal = hypot(size.width, size.height)
                                 if joint == .rightShoulder || joint == .leftShoulder {
-                                    // Convert normalized distance to pixels
-                                    let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * size.width
-                                    let radius = armDistanceInPixels * 2 // Adjust for scaling
-
+                                    
+                                    let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * viewDiagonal
+                                    
+                                    let radius = armDistanceInPixels  // Adjust for scaling
+                                    
                                     context.stroke(
                                         Path(ellipseIn: CGRect(
                                             x: position.x - radius, // Shift left by radius
@@ -74,29 +76,29 @@ struct GuideView: View {
                                     )
                                 }
                                 
-//                                if joint == .rightHip || joint == .leftHip {
-//                                    // Convert normalized distance to pixels
-//                                    let legDistanceInPixels = (guideProcessor.legDistance ?? 0.0) * size.width
-//                                    let radius = legDistanceInPixels * 1.5 // Adjust for scaling
-//
-//                                    context.stroke(
-//                                        Path(ellipseIn: CGRect(
-//                                            x: position.x - radius, // Shift left by radius
-//                                            y: position.y - radius, // Shift up by radius
-//                                            width: radius * 2, // Diameter
-//                                            height: radius * 2
-//                                        )),
-//                                        with: .color(.yellow), lineWidth: 2
-//                                    )
-//                                }
+                                if joint == .rightHip || joint == .leftHip {
+                                     // Get diagonal size of view
+                                    let legDistanceInPixels = (guideProcessor.legDistance ?? 0.0) * viewDiagonal
+                                    
+                                    let radius = legDistanceInPixels  // Adjust for scaling
+                                    
+                                    context.stroke(
+                                        Path(ellipseIn: CGRect(
+                                            x: position.x - radius, // Shift left by radius
+                                            y: position.y - radius, // Shift up by radius
+                                            width: radius * 2, // Diameter
+                                            height: radius * 2
+                                        )),
+                                        with: .color(.yellow), lineWidth: 2
+                                    )
+                                }
+                                
+
                             }
                         }
                         
                         if let detections = guideProcessor.detections {
-//                            let imageSize = CGSize(
-//                                width: image.cgImage?.width ?? 1,
-//                                height: image.cgImage?.height ?? 1
-//                            )
+
 
                             ForEach(detections) { detection in
                                 let viewSize = geometry.size // SwiftUI view size
