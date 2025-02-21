@@ -25,6 +25,7 @@ struct TechView: View {
                 ToolView(image: "square.grid.2x2", label: "UIKit", color: Color(.red))
                 ToolView(image: "r.circle", label: "Roboflow", color: Color(.purple))
             }
+            .padding(.bottom)
             
             NavigationLink {
                 HomeView()
@@ -39,6 +40,7 @@ struct TechView: View {
                 .cornerRadius(15)
             }
         }
+        .padding(.bottom)
     }
 }
 

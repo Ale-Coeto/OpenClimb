@@ -12,6 +12,11 @@ struct GuideFeatureView: View {
     
     var body: some View {
         VStack {
+            Image("CB")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .padding(.horizontal, 50)
+            
             Text("Guide mode")
                 .padding()
                 .foregroundStyle(Color("Text"))

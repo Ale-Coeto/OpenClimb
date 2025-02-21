@@ -13,6 +13,11 @@ struct ColorBlindFeatureView: View {
     var body: some View {
         VStack {
             
+            Image("CB")
+                .resizable()
+                .aspectRatio(contentMode: .fit)            
+                .padding(.horizontal, 50)
+            
             Text("Color blind mode")
                 .padding()
                 .foregroundStyle(Color("Text"))

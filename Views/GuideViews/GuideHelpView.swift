@@ -21,55 +21,86 @@ struct GuideHelpView: View {
                 TabView (selection: $vm.helpPageIndex) {
                     // Page 1
                     VStack {
-                        Text("Page 1")
+                        
+                        Image(systemName: "questionmark.circle")
                             .font(.title)
                             .padding()
-                        Text("This is the content of the first page.")
-                            .multilineTextAlignment(.center)
+                            .foregroundStyle(Color("Primary"))
+                        
+                        Text("How to use")
+                            .font(.title)
                             .padding()
-                        Image(systemName: "arrow.right")
-                            .font(.largeTitle)
-                            .foregroundColor(.blue)
-                            .offset(x: vm.arrowOffset)
-                            .onAppear {
-                                withAnimation(
-                                    Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)
-                                ) {
-                                    vm.arrowOffset = 20
-                                }
-                            }
-                            .padding(.top, 20)
-                            .onTapGesture {
-                                // Go to the next page when the arrow is tapped
-                                withAnimation {
-                                    vm.helpPageIndex = (vm.helpPageIndex + 1) % 2 // Cycle between 0 and 1
-                                }
-                            }
+                            .foregroundStyle(Color("Text"))
+            
+                        
+                        InstructionView(number: 1, description: "Place the camera pointing to the climbing wall.")
+                        
+                        InstructionView(number: 2, description: "Go to the wall and make sure you are fully visible.")
+                        
+                        InstructionView(number: 3, description: "Every x seconds, OpenClimb will detect your body position and holds, saying the possible holds that you could reach.")
+                        
+                        
+                        
+                        Arrow(vm: vm)
                         
                     }
+                    .padding(.horizontal, 30)
                     .tag(0)
                     
                     // Page 2
                     VStack {
-                        Text("Page 2")
+                        Text("Description format")
                             .font(.title)
                             .padding()
-                        Text("This is the content of the second page.")
-                            .multilineTextAlignment(.center)
-                            .padding()
+                            .foregroundStyle(Color("Text"))
+                        
+                        VStack(alignment: .leading) {
+                            
+                            
+                            Text("The descriptions include the following elements:")
+                                .padding(.bottom)
+                           
+                            FormatView(label: "Color", icon: "paintpalette", description: "To identify routes.")
+                            
+                            FormatView(label: "Limbs", icon: "hand.raised", description: "Right hand, left hand, right foot, left foot.")
+                            
+                            FormatView(label: "Holds Positions", icon: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left", description: "Above, below, left, right, above to the left, above to the right, below to the left and below to the right.")
+                          
+                            FormatView(label: "Distance", icon: "ruler", description: "Near (default), far")
+                            
+                        }
+                        
+                        Text("Example")
+                            .foregroundStyle(Color("Text"))
+                            .fontWeight(.semibold)
+                            
+                        Text("\"There is a blue hold far above your right hand.\"")
+//                            .padding(.bottom)
+                        
+                        Arrow(vm: vm)
+                        
                     }
+                    .padding(.horizontal, 30)
                     .tag(1)
+                    
+                    VStack {
+                        Button {
+                            withAnimation {
+                                vm.helpMode = false
+                            }
+                        } label: {
+                            Text("Got it!")
+                        .padding(10)
+                        .background(Color("Secondary"))
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        }
+                    }
+                    .tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                 
-                Button {
-                    withAnimation {
-                        vm.helpMode = false
-                    }
-                } label: {
-                    Text("Got it")
-                        .padding()
-                }
+                
                 
             }
             //                    .padding(50)
@@ -78,6 +109,8 @@ struct GuideHelpView: View {
         .padding(20)
     }
 }
+
+
 
 #Preview {
     GuideHelpView(vm: GuideVM())

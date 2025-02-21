@@ -23,7 +23,7 @@ struct WhatIsView: View {
                 .foregroundStyle(Color("Text"))
             
             
-            Text("Open climb is an app design to provide tools for visually impaired people who want to try climbing or are looking for more independence when practicing the sport indoors.")
+            Text("Open climb is an app designed to provide tools for visually impaired people who want to try climbing or are looking for more independence when practicing the sport indoors.")
                 .padding()
             
             ArrowView(vm: vm)

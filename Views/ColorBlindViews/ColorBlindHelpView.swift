@@ -36,7 +36,7 @@ struct ColorBlindHelpView: View {
                         .frame(width: 10, height: 10)
                         .padding(.bottom, pd)
                         
-                        InstructionView(number: 2, description: "When centered, click the capture button")
+                        InstructionView(number: 2, description: "When centered, click the capture button.")
                         
                         ZStack {
                             Circle()
@@ -50,7 +50,7 @@ struct ColorBlindHelpView: View {
                         }
                         .padding(.bottom, pd)
                        
-                        InstructionView(number: 2, description: "To freeze the image, click the capture button again and unfreeze it using the same button.")
+                        InstructionView(number: 3, description: "To freeze and unfreeze use the same capture button.")
                         .padding(.bottom, pd)
                       
                         InstructionView(number: 4, description: "To select another starting hold or improve the result click the 'Reset' button.")
@@ -106,8 +106,11 @@ struct ColorBlindHelpView: View {
                                 vm.helpMode = false
                             }
                         } label: {
-                            Text("Got it")
-                                .padding()
+                            Text("Got it!")
+                        .padding(10)
+                        .background(Color("Secondary"))
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
                         }
                     }
                     .tag(1)
