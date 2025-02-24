@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 11/02/25.
 //
+//  Component views for introduction views
+//
 
 import SwiftUI
 
@@ -45,12 +47,10 @@ struct ArrowView: View {
                 }
             }
             .onTapGesture {
-                // Go to the next page when the arrow is tapped
                 withAnimation {
                     vm.pageIndex = (vm.pageIndex + 1)
                 }
             }
-            
     }
 }
 

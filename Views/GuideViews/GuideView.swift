@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 02/02/25.
 //
+//  Main view for guide mode
+//
 
 import SwiftUI
 import Combine
@@ -14,12 +16,10 @@ import Vision
 struct GuideView: View {
     @StateObject var guideProcessor = GuideProcessor()
     @StateObject var frameHandler = FrameHandler()
-//    @StateObject var speech = Speech()
     @State private var timer: AnyCancellable?
     
     var body: some View {
         VStack {
-//            Text(guideProcessor.textForSpeech)
             if let image = guideProcessor.frame {
                 
                 GeometryReader { geometry in
@@ -27,16 +27,13 @@ struct GuideView: View {
                         
                         Image(uiImage: image)
                             .resizable()
-//                            .ignoresSafeArea()
                             .id(UUID())
-                       
+                        
                         Canvas { context, size in
-                            // Check if there are joints before drawing
                             guard let joints = guideProcessor.joints, !joints.isEmpty else {
-                                return // Skip drawing if no joints detected
+                                return
                             }
-
-                            // Draw connections
+                            
                             for (joint1, joint2) in bodyConnections {
                                 if let p1 = joints[joint1]?.location, let p2 = joints[joint2]?.location {
                                     let start = guideProcessor.normalizedToView(p1, in: size)
@@ -51,9 +48,7 @@ struct GuideView: View {
                                     )
                                 }
                             }
-
-                            // Draw joint circles
-//                            let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * size.width
+                            
                             for (joint, point) in joints {
                                 let position = guideProcessor.normalizedToView(point.location, in: size)
                                 context.fill(
@@ -66,46 +61,25 @@ struct GuideView: View {
                                     
                                     let armDistanceInPixels = (guideProcessor.armDistance ?? 0.0) * viewDiagonal
                                     
-                                    let radius = armDistanceInPixels  // Adjust for scaling
+                                    let radius = armDistanceInPixels
                                     
                                     context.stroke(
                                         Path(ellipseIn: CGRect(
-                                            x: position.x - radius, // Shift left by radius
-                                            y: position.y - radius, // Shift up by radius
-                                            width: radius * 2, // Diameter
+                                            x: position.x - radius,
+                                            y: position.y - radius,
+                                            width: radius * 2,
                                             height: radius * 2
                                         )),
                                         with: .color(.green), lineWidth: 2
                                     )
                                 }
-                                
-                                if joint == .rightHip || joint == .leftHip {
-                                     // Get diagonal size of view
-                                    let legDistanceInPixels = (guideProcessor.legDistance ?? 0.0) * viewDiagonal
-                                    
-                                    let radius = legDistanceInPixels  // Adjust for scaling
-                                    
-                                    context.stroke(
-                                        Path(ellipseIn: CGRect(
-                                            x: position.x - radius, // Shift left by radius
-                                            y: position.y - radius, // Shift up by radius
-                                            width: radius * 2, // Diameter
-                                            height: radius * 2
-                                        )),
-                                        with: .color(.yellow), lineWidth: 2
-                                    )
-                                }
-                                
-
                             }
                         }
                         
                         if let detections = guideProcessor.detections {
-
-
                             ForEach(detections) { detection in
-                                let viewSize = geometry.size // SwiftUI view size
-
+                                let viewSize = geometry.size
+                                
                                 let centerInView = guideProcessor.normalizedToView(detection.center, in: viewSize)
                                 let widthInView = detection.width * viewSize.width
                                 let heightInView = detection.height * viewSize.height
@@ -119,30 +93,21 @@ struct GuideView: View {
                         if let personRect = guideProcessor.personRectangle {
                             let viewSize = geometry.size
                             
-                            // Calculate the center of the normalized rectangle
                             let centerInNormalizedSpace = CGPoint(
                                 x: personRect.origin.x + personRect.width / 2,
                                 y: personRect.origin.y + personRect.height / 2
                             )
                             
-                            // Convert CGPoint to NormalizedPoint
                             let normalizedCenter = NormalizedPoint(x: centerInNormalizedSpace.x, y: centerInNormalizedSpace.y)
-                            
-                            // Convert the normalized center to the view coordinates
                             let centerInView = guideProcessor.normalizedToView(normalizedCenter, in: viewSize)
+                            let widthInView = personRect.width * viewSize.width
+                            let heightInView = personRect.height * viewSize.height
                             
-                            // Scale the width and height to the actual view size
-                            let widthInView = personRect.width * viewSize.width  // Scale the width
-                            let heightInView = personRect.height * viewSize.height  // Scale the height
-                            
-                            // Create the rectangle with the calculated width, height, and center position
                             Rectangle()
                                 .stroke(.white, lineWidth: 2)
                                 .frame(width: widthInView, height: heightInView)
                                 .position(centerInView)
                         }
-
-
                     }
                 }
             } else {
@@ -152,7 +117,6 @@ struct GuideView: View {
                         .foregroundStyle(.white)
                 }
             }
-            
             
         }
         .ignoresSafeArea()
@@ -172,21 +136,21 @@ struct GuideView: View {
     }
     
     func startTimer() {
-            timer = Timer.publish(every: 8.0, on: .main, in: .common) // Change 5.0 to desired interval
-                .autoconnect()
-                .sink { _ in
-                    if !guideProcessor.isProcessing {
-                        Task {
-                            await guideProcessor.process()
-                        }
-                    } 
-                }
-        }
-
-        func stopTimer() {
-            timer?.cancel()
-            timer = nil
-        }
+        timer = Timer.publish(every: 10.0, on: .main, in: .common) 
+            .autoconnect()
+            .sink { _ in
+                if !guideProcessor.isProcessing && !frameHandler.isVideoPlaying {
+                    Task {
+                        await guideProcessor.process()
+                    }
+                } 
+            }
+    }
+    
+    func stopTimer() {
+        timer?.cancel()
+        timer = nil
+    }
     
 }
 

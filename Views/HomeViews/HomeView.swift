@@ -4,6 +4,7 @@
 //
 //  Created by Alejandra Coeto on 29/01/25.
 //
+//  Home view
 
 import SwiftUI
 
@@ -17,8 +18,9 @@ struct HomeView: View {
                         .foregroundStyle(.white)
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .accessibilityLabel("Home Screen")
                     Spacer()
-                   
+                    
                 }
                 .padding()
                 .background(Color("Primary"))
@@ -32,9 +34,11 @@ struct HomeView: View {
                             .font(.title3)
                             .fontWeight(.semibold)
                             .padding(.bottom)
+                            .accessibilityAddTraits(.isHeader)
                         
                         Text("Climbing is a sport that targets movement in complex ways. In competitive levels there are also several categories for visually impaired people. This app intents to provide more independence to people with these complications using vision tools.")
-                        
+                            .accessibilityLabel("Climbing is a sport that requires complex movement. This app helps visually impaired climbers with vision tools.")
+                            .minimumScaleFactor(0.8)
                         NavigationLink {
                             SeeMoreView()
                         } label: {
@@ -43,44 +47,31 @@ struct HomeView: View {
                                 .foregroundStyle(Color("Secondary"))
                                 .padding(.top, 5)
                         }
+                        .accessibilityLabel("Learn more about climbing and accessibility.")
                         .padding(.bottom, 30)
                         
-                            Text("Modes")
-                                .foregroundStyle(Color("Text"))
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .padding(.bottom)
+                        Text("Modes")
+                            .foregroundStyle(Color("Text"))
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .padding(.bottom)
+                            .accessibilityAddTraits(.isHeader)
                         
-                        //                NavigationLink {
-                        //                    ColorBlindView()
-                        //                } label: {
                         ModeCard(title: "Colorblind Mode", description: "Distinguish different routes by color", image: "CB")
-                        //                    .padding(.vertical)
-                        //                }
+                            .accessibilityLabel("Colorblind Mode. Helps distinguish different routes by color.")
                         
-                        
-                        //                NavigationLink {
-                        //                    GuideView()
-                        //                } label: {
                         ModeCard(title: "Guide Mode", description: "Get real-time audio guidance to climb a route.", image: "GM")
                             .padding(.vertical)
-                        
-                        
-                        //                }
+                            .accessibilityLabel("Guide Mode. Provides real-time audio guidance for climbing.")
                         
                     }
                     .padding(30)
                 }
                 .ignoresSafeArea()
-                
-
-                            .background(Color("Bg"))
-                
+                .background(Color("Bg"))
                 
             }
-            
         }
-        
     }
 }
 

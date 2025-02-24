@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 13/02/25.
 //
+//  Component views for home views
+//
 
 import SwiftUI
 
@@ -14,24 +16,22 @@ struct ModeCard: View {
     
     var body: some View {
         ZStack {
-//            RoundedRectangle(cornerRadius: 10)
-//                .fill(.white)
-//                .shadow(radius: 1)
-//                .frame(height: .)
-            
             HStack {
                 Image(image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-//                    .padding(.leading)
+                    .accessibilityLabel("Image for \(title)")
                 
                 VStack (alignment: .leading) {
                     Text(title)
                         .foregroundStyle(Color("Text"))
                         .fontWeight(.semibold)
+                        .accessibilityIdentifier("ModeCardTitle") 
+                        .accessibilityLabel(title)
                     
                     Text(description)
                         .foregroundStyle(.gray)
+                        .accessibilityLabel(description)
                     
                     NavigationLink {
                         if title == "Colorblind Mode" {
@@ -41,11 +41,12 @@ struct ModeCard: View {
                         }
                         
                     } label: {
-                            Text("Get started")
-                        .padding(10)
-                        .background(Color("Secondary"))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                        Text("Get started")
+                            .padding(10)
+                            .background(Color("Secondary"))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .accessibilityLabel("Start guide for \(title)")
                     }
                 }
                 .padding(.horizontal)
@@ -55,6 +56,7 @@ struct ModeCard: View {
             .background(.white)
             .cornerRadius(10)
             .shadow(color: Color(.black).opacity(0.3), radius: 0.5)
+            .accessibilityElement(children: .ignore)
             
         }
     }
@@ -69,15 +71,18 @@ struct SightCategory: View {
             HStack (alignment: .top) {
                 Text("\(category). ")
                     .foregroundStyle(Color("Secondary"))
+                    .accessibilityLabel("Category: \(category)")
                 
                 VStack (alignment: .leading) {
                     ForEach(bullets, id:\.self) { bullet in
                         Text("\(bullet)")
+                            .accessibilityLabel("Bullet point: \(bullet)")
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 

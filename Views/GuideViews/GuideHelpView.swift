@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 09/02/25.
 //
+//  View with instructions to use guide mode
+//
 
 import SwiftUI
 
@@ -31,7 +33,7 @@ struct GuideHelpView: View {
                             .font(.title)
                             .padding()
                             .foregroundStyle(Color("Text"))
-            
+                        
                         
                         InstructionView(number: 1, description: "Place the camera pointing to the climbing wall.")
                             .padding(.bottom)
@@ -61,13 +63,13 @@ struct GuideHelpView: View {
                             
                             Text("The descriptions include the following elements:")
                                 .padding(.bottom)
-                           
+                            
                             FormatView(label: "Color", icon: "paintpalette", description: "To identify routes.")
                             
                             FormatView(label: "Limbs", icon: "hand.raised", description: "Right hand, left hand, right foot, left foot.")
                             
                             FormatView(label: "Holds Positions", icon: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left", description: "Above, below, left, right, above to the left, above to the right, below to the left and below to the right.")
-                          
+                            
                             FormatView(label: "Distance", icon: "ruler", description: "Near (default), far")
                             
                         }
@@ -75,40 +77,44 @@ struct GuideHelpView: View {
                         Text("Example")
                             .foregroundStyle(Color("Text"))
                             .fontWeight(.semibold)
-                            
+                        
                         Text("\"There is a blue hold far above your right hand.\"")
-//                            .padding(.bottom)
                         
-                        Arrow(vm: vm)
-                        
-                    }
-                    .padding(.horizontal, 30)
-                    .tag(1)
-                    
-                    VStack {
                         Button {
                             withAnimation {
                                 vm.helpMode = false
                             }
                         } label: {
                             Text("Got it!")
-                        .padding(10)
-                        .background(Color("Secondary"))
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
+                                .padding(10)
+                                .background(Color("Secondary"))
+                                .foregroundColor(.white)
+                                .cornerRadius(15)
                         }
+                        
                     }
-                    .tag(2)
+                    .padding(.horizontal, 30)
+                    .tag(1)
+                    
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                 
-                
-                
             }
-            //                    .padding(50)
         }
         .transition(.opacity.combined(with: .opacity))
         .padding(20)
+        
+        Button {
+            withAnimation {
+                vm.helpMode = false
+            }
+        } label: {
+            Text("Got it!")
+                .padding(10)
+                .background(Color("Secondary"))
+                .foregroundColor(.white)
+                .cornerRadius(15)
+        }
     }
 }
 

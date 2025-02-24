@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 12/02/25.
 //
+//  Component views for colorblind mode
+//
 
 import SwiftUI
 
@@ -30,7 +32,7 @@ struct DetectedColorView: View {
             }
             Text("Color: \(closestColorName(for: color))")
                 .foregroundStyle(.white)
-    
+            
         }
         .padding()
     }

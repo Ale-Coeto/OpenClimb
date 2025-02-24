@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 06/02/25.
 //
+//  Overlay view with buttons, titles and annotations
+//
 
 import SwiftUI
 
@@ -40,11 +42,10 @@ struct ColorBlindOverlayView: View {
                 if vm.isSetting {
                     DetectedColorView(color: colorBlindProcessor.centerColor)
                     Spacer()
-
+                    
                 } else {
                     VStack {
                         DetectedColorView(color: colorBlindProcessor.filterColor)
-                        
                         
                         Button {
                             vm.handleReset()
@@ -93,8 +94,6 @@ struct ColorBlindOverlayView: View {
                                 .opacity(0.6)
                         }
                     }
-                    
-                    
                 }
             }
             .blur(radius: vm.helpMode ? 10 : 0)

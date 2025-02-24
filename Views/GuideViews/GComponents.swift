@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 20/02/25.
 //
+//  Component views for guide mode
+//
 
 import SwiftUI
 
@@ -42,9 +44,8 @@ struct Arrow: View {
             }
             .padding(.top, 20)
             .onTapGesture {
-                // Go to the next page when the arrow is tapped
                 withAnimation {
-                    vm.helpPageIndex = (vm.helpPageIndex + 1) // Cycle between 0 and 1
+                    vm.helpPageIndex = (vm.helpPageIndex + 1)
                 }
             }
             .onAppear {

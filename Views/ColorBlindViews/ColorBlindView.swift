@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 03/02/25.
 //
+//  Main colorblind mode view
+//
 
 import SwiftUI
 
@@ -11,7 +13,6 @@ struct ColorBlindView: View {
     @StateObject var vm = ColorBlindVM()
     @StateObject var frameHandler = FrameHandler()
     @StateObject private var colorBlindProcessor = ColorBlindProcessor()
-//    @State var sheet = true
     
     var body: some View {
         
@@ -32,14 +33,14 @@ struct ColorBlindView: View {
                             )
                             let scaleX = geometry.size.width / imageSize.width
                             let scaleY = geometry.size.height / imageSize.height
-
+                            
                             let scaledRect = CGRect(
                                 x: rect.origin.x * scaleX,
                                 y: rect.origin.y * scaleY,
                                 width: rect.width * scaleX,
                                 height: rect.height * scaleY
                             )
-
+                            
                             Rectangle()
                             
                                 .stroke(Color.white, lineWidth: 2)

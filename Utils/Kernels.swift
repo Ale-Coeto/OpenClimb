@@ -4,6 +4,9 @@
 //
 //  Created by Alejandra Coeto on 03/02/25.
 //
+//  Kernel to apply a filter to an image,
+//  highlighting a color within a threshold.
+//
 
 import Foundation
 let kernelCode = """

@@ -4,7 +4,10 @@
 //
 //  Created by Alejandra Coeto on 03/02/25.
 //
-//
+//  Class to process frames published by the frame handler for colorblind mode.
+//  It obtains an average rgb color from the center of the image
+//  and applies a filter to highlight it, also providing possible
+//  string value.
 
 import Combine
 import UIKit
@@ -22,17 +25,13 @@ class ColorBlindProcessor: ObservableObject {
     init() {
         let dummyImage = CIImage(color: .black).cropped(to: CGRect(x: 0, y: 0, width: 1, height: 1))
         _ = context.createCGImage(dummyImage, from: dummyImage.extent)
-        
     }
     
     func setup(framePublisher: PassthroughSubject<CIImage, Never>) {
         framePublisher
             .compactMap(makeCGImage)
-        
             .map(getRGBValues)
-        
             .compactMap(applyFilter)
-        
             .receive(on: RunLoop.main)
             .sink(receiveValue: setImage)
             .store(in: &cancellables)
@@ -60,11 +59,13 @@ class ColorBlindProcessor: ObservableObject {
             let filteredImage = applyCustomKernel(image: frame, redThreshold: Float(filterColor!.red), greenThreshold: Float(filterColor!.green), blueThreshold: Float(filterColor!.blue))!
             let cg = context.createCGImage(filteredImage, from: filteredImage.extent)
             uiImage = UIImage(cgImage: cg!)
-            print("Used filter")
         }
         
-        print("Success")
         return uiImage
+    }
+    
+    private func setImage(_ uiImage: UIImage) {
+        frame1 = uiImage
     }
     
     func setColor() {
@@ -75,10 +76,6 @@ class ColorBlindProcessor: ObservableObject {
     func resetColor() {
         filterColor = nil
         useFilter = false
-    }
-    
-    private func setImage(_ uiImage: UIImage) {
-        frame1 = uiImage
     }
     
     func setSamplingRectangle(for cgImage: CGImage, regionSize: Int = 20) {
@@ -109,32 +106,6 @@ class ColorBlindProcessor: ObservableObject {
         let outputImage = kernel!.apply(extent: image.extent, arguments: arguments)
         return outputImage
     }
-    
-    //    func getCenterRGBValues(from cgImage: CGImage) -> (red: UInt8, green: UInt8, blue: UInt8)? {
-    //        let width = cgImage.width
-    //        let height = cgImage.height
-    //        let bytesPerPixel = 4 // Assuming RGBA
-    //        let bytesPerRow = cgImage.bytesPerRow
-    //        let centerX = width / 2
-    //        let centerY = height / 2
-    //
-    //        guard let dataProvider = cgImage.dataProvider,
-    //              let pixelData = dataProvider.data else {
-    //            print("Failed to access pixel data.")
-    //            return nil
-    //        }
-    //
-    //        let dataPointer = CFDataGetBytePtr(pixelData)
-    //        let offset = (centerY * bytesPerRow) + (centerX * bytesPerPixel)
-    //        let red = dataPointer![offset]
-    //        let green = dataPointer![offset + 1]
-    //        let blue = dataPointer![offset + 2]
-    //
-    //        return (red: red, green: green, blue: blue)
-    //    }
-    //
-    
-    
     
     func getAverageRGBValues(from cgImage: CGImage) -> (red: UInt8, green: UInt8, blue: UInt8)? {
         guard let rectangle = samplingRectangle else {
@@ -181,4 +152,3 @@ class ColorBlindProcessor: ObservableObject {
     }
     
 }
-

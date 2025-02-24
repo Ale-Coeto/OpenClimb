@@ -42,7 +42,7 @@ let package = Package(
             name: "AppModule",
             path: ".",
             resources: [
-                .copy("Model/HoldDetector.mlmodelc"),
+                .copy("Model/HoldsDetector.mlmodelc"),
                 .copy("Resources/sample.mov")
             ]
         )

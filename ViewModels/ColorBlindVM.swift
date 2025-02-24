@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 03/02/25.
 //
+//  Class view model for colorbling mode view
+//
 
 import Foundation
 

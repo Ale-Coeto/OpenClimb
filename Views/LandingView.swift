@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 03/02/25.
 //
+//  Landing view with logo and start button
+//
 
 import SwiftUI
 

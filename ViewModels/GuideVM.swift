@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 09/02/25.
 //
+//  Class view model for guide mode view
+//
 
 import Foundation
 

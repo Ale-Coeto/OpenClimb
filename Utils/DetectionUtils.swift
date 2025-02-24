@@ -3,6 +3,7 @@
 //  OpenClimb
 //
 //  Created by Alejandra Coeto on 13/02/25.
+//  Class for detections and some joint utils
 //
 
 import Foundation

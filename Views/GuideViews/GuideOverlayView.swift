@@ -4,13 +4,14 @@
 //
 //  Created by Alejandra Coeto on 09/02/25.
 //
+//  Overlay view for guide mode with annotations, titles and buttons
+//
 
 import SwiftUI
 
 struct GuideOverlayView: View {
     @ObservedObject var guideProcessor: GuideProcessor
     @ObservedObject var frameHandler: FrameHandler
-//    @ObservedObject var speech: Speech
     @StateObject var vm = GuideVM()
     
     var body: some View {
@@ -40,32 +41,14 @@ struct GuideOverlayView: View {
                 Text(guideProcessor.textForSpeech)
                 
                 Button {
-                    Task {
-                        await guideProcessor.process()
-
-                    }
+                    frameHandler.mode = frameHandler.mode == .camera ? .video : .camera
                 } label: {
-                    Text("GET Det")
+                    Text(frameHandler.mode == .camera ? "Play Demo Video" : "Switch to Camera")
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
-                
-                Button(action: {
-                                frameHandler.mode = frameHandler.mode == .camera ? .video : .camera
-                            }) {
-                                Text(frameHandler.mode == .camera ? "Play Video" : "Switch to Camera")
-                                    .padding()
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                            }
-                //
-//                Button {
-//                    Task {
-//                        await guideProcessor.getPose()
-//                        //                    speech.say(text: guideProcessor.textForSpeech)
-//                    }
-//                } label: {
-//                    Text("GET POSE")
-//                }
             }
             if vm.helpMode {
                 GuideHelpView(vm: vm)

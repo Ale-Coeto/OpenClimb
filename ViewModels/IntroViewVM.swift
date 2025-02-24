@@ -4,6 +4,8 @@
 //
 //  Created by Alejandra Coeto on 10/02/25.
 //
+//  Class view model for introduction views
+//
 
 import Foundation
 import SwiftUI
