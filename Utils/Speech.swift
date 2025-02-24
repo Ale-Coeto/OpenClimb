@@ -17,7 +17,7 @@ class Speech {
 
         utterance.rate = 0.57
         utterance.pitchMultiplier = 0.8
-        utterance.postUtteranceDelay = 0.2
+        utterance.postUtteranceDelay = 0.6
         utterance.volume = 1
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         

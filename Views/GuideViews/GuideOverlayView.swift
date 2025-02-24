@@ -47,6 +47,16 @@ struct GuideOverlayView: View {
                 } label: {
                     Text("GET Det")
                 }
+                
+                Button(action: {
+                                frameHandler.mode = frameHandler.mode == .camera ? .video : .camera
+                            }) {
+                                Text(frameHandler.mode == .camera ? "Play Video" : "Switch to Camera")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
                 //
 //                Button {
 //                    Task {

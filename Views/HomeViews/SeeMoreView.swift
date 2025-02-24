@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SeeMoreView: View {
     var body: some View {
-        VStack {
+        VStack (spacing: 0){
             HStack {
                 Text("Paraclimbing")
                     .foregroundStyle(.white)

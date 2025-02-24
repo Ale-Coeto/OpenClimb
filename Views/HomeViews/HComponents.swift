@@ -37,7 +37,7 @@ struct ModeCard: View {
                         if title == "Colorblind Mode" {
                             ColorBlindView()
                         } else {
-                            SeeMoreView()
+                            GuideView()
                         }
                         
                     } label: {

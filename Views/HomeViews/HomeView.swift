@@ -41,10 +41,11 @@ struct HomeView: View {
                             Text("Learn more")
                                 .underline()
                                 .foregroundStyle(Color("Secondary"))
+                                .padding(.top, 5)
                         }
                         .padding(.bottom, 30)
                         
-                            Text("Models")
+                            Text("Modes")
                                 .foregroundStyle(Color("Text"))
                                 .font(.title3)
                                 .fontWeight(.semibold)
@@ -61,7 +62,7 @@ struct HomeView: View {
                         //                NavigationLink {
                         //                    GuideView()
                         //                } label: {
-                        ModeCard(title: "Guide Mode", description: "Get real-time audio guidance to climb a route.", image: "")
+                        ModeCard(title: "Guide Mode", description: "Get real-time audio guidance to climb a route.", image: "GM")
                             .padding(.vertical)
                         
                         

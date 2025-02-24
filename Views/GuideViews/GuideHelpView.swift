@@ -14,7 +14,7 @@ struct GuideHelpView: View {
         ZStack {
             
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.white.opacity(0.8))
+                .fill(Color.white.opacity(0.9))
                 .ignoresSafeArea()
             
             VStack {
@@ -34,11 +34,13 @@ struct GuideHelpView: View {
             
                         
                         InstructionView(number: 1, description: "Place the camera pointing to the climbing wall.")
+                            .padding(.bottom)
                         
                         InstructionView(number: 2, description: "Go to the wall and make sure you are fully visible.")
+                            .padding(.bottom)
                         
                         InstructionView(number: 3, description: "Every x seconds, OpenClimb will detect your body position and holds, saying the possible holds that you could reach.")
-                        
+                            .padding(.bottom)
                         
                         
                         Arrow(vm: vm)

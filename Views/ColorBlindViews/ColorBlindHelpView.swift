@@ -20,6 +20,23 @@ struct ColorBlindHelpView: View {
                 .ignoresSafeArea()
             
             VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        withAnimation {
+                            vm.helpMode = false
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle")
+                            .foregroundStyle(.gray)
+                            .font(.title3)
+                    }
+                }
+                Spacer()
+            }
+            .padding(30)
+            
+            VStack {
                 TabView (selection: $vm.helpPageIndex) {
                     // Page 1
                     VStack {
@@ -94,12 +111,14 @@ struct ColorBlindHelpView: View {
                     
                     // Page 2
                     VStack {
-                        Text("Page 2")
-                            .font(.title)
-                            .padding()
-                        Text("This is the content of the second page.")
-                            .multilineTextAlignment(.center)
-                            .padding()
+                        Text("Example")
+                            .foregroundStyle(Color("Text"))
+                            .font(.title2)
+                        
+                        Image("CBDemo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 250)
                         
                         Button {
                             withAnimation {
@@ -111,6 +130,7 @@ struct ColorBlindHelpView: View {
                         .background(Color("Secondary"))
                         .foregroundColor(.white)
                         .cornerRadius(15)
+                        .padding(.top,10)
                         }
                     }
                     .tag(1)

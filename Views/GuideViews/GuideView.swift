@@ -7,6 +7,9 @@
 
 import SwiftUI
 import Combine
+import Foundation
+import Vision
+
 
 struct GuideView: View {
     @StateObject var guideProcessor = GuideProcessor()
@@ -113,6 +116,33 @@ struct GuideView: View {
                             }
                         }
                         
+                        if let personRect = guideProcessor.personRectangle {
+                            let viewSize = geometry.size
+                            
+                            // Calculate the center of the normalized rectangle
+                            let centerInNormalizedSpace = CGPoint(
+                                x: personRect.origin.x + personRect.width / 2,
+                                y: personRect.origin.y + personRect.height / 2
+                            )
+                            
+                            // Convert CGPoint to NormalizedPoint
+                            let normalizedCenter = NormalizedPoint(x: centerInNormalizedSpace.x, y: centerInNormalizedSpace.y)
+                            
+                            // Convert the normalized center to the view coordinates
+                            let centerInView = guideProcessor.normalizedToView(normalizedCenter, in: viewSize)
+                            
+                            // Scale the width and height to the actual view size
+                            let widthInView = personRect.width * viewSize.width  // Scale the width
+                            let heightInView = personRect.height * viewSize.height  // Scale the height
+                            
+                            // Create the rectangle with the calculated width, height, and center position
+                            Rectangle()
+                                .stroke(.white, lineWidth: 2)
+                                .frame(width: widthInView, height: heightInView)
+                                .position(centerInView)
+                        }
+
+
                     }
                 }
             } else {
@@ -132,8 +162,7 @@ struct GuideView: View {
         .onAppear {
             guideProcessor.setupChain(framePublisher: frameHandler.framePublisher)
             frameHandler.startSession()
-//            startTimer()
-            
+            startTimer()
         }
         .onDisappear {
             stopTimer()
@@ -143,17 +172,14 @@ struct GuideView: View {
     }
     
     func startTimer() {
-            timer = Timer.publish(every: 15.0, on: .main, in: .common) // Change 5.0 to desired interval
+            timer = Timer.publish(every: 8.0, on: .main, in: .common) // Change 5.0 to desired interval
                 .autoconnect()
                 .sink { _ in
-                    Task {
-//                        await guideProcessor.getDetections()
-//                        if guideProcessor.textForSpeech != "" {
-//                            speech.say(text: guideProcessor.textForSpeech)
-//                        } else {
-//                            speech.say(text: "No holds or person detected.")
-//                        }
-                    }
+                    if !guideProcessor.isProcessing {
+                        Task {
+                            await guideProcessor.process()
+                        }
+                    } 
                 }
         }
 

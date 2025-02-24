@@ -29,7 +29,7 @@ struct DeveloperView: View {
             
             
             
-            Text("Hi, I'm a software developer currently studying computer science. I was a Distinguished SSC Winner for 2024 and love to develop new ideas and share my passion for programming with the rest of the community. I also really enjoy climbing and hope to help more people try the sport.")
+            Text("Hi, I'm a software developer currently studying computer science. I was a SSC Winner for 2024 and love to develop new ideas and share my passion for programming with the rest of the community. I also really enjoy climbing and hope to help more people try the sport.")
                 .padding(.horizontal)
 
             
