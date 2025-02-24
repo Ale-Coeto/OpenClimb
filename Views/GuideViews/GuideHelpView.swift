@@ -104,17 +104,23 @@ struct GuideHelpView: View {
         .transition(.opacity.combined(with: .opacity))
         .padding(20)
         
-        Button {
-            withAnimation {
-                vm.helpMode = false
+        VStack {
+            HStack {
+                Spacer()
+                Button {
+                    withAnimation {
+                        vm.helpMode = false
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .foregroundStyle(.gray)
+                        .font(.title3)
+                }
             }
-        } label: {
-            Text("Got it!")
-                .padding(10)
-                .background(Color("Secondary"))
-                .foregroundColor(.white)
-                .cornerRadius(15)
+            Spacer()
         }
+        .padding(30)
+        
     }
 }
 

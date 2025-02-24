@@ -38,8 +38,11 @@ struct GuideOverlayView: View {
                 
                 Spacer()
                 
-                Text(guideProcessor.textForSpeech)
-                
+                if frameHandler.isVideoPlaying {
+                    Text("")
+                } else {
+                    Text(guideProcessor.textForSpeech)
+                }
                 Button {
                     frameHandler.mode = frameHandler.mode == .camera ? .video : .camera
                 } label: {
