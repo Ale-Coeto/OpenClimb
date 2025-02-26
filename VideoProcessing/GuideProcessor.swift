@@ -42,7 +42,7 @@ class GuideProcessor: ObservableObject {
     init() {
         let dummyImage = CIImage(color: .black).cropped(to: CGRect(x: 0, y: 0, width: 1, height: 1))
         _ = context.createCGImage(dummyImage, from: dummyImage.extent)
-        let detector = try? HoldsDetector(configuration: MLModelConfiguration())
+        let detector = try? HoldDetector(configuration: MLModelConfiguration())
         
         let cont = try? CoreMLModelContainer(model: detector!.model)
         model = CoreMLRequest(model: cont!)
