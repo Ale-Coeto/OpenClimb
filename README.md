@@ -27,3 +27,5 @@ each hold. Thus, this mode aims to provide them with independence when training,
   <img src="https://github.com/user-attachments/assets/13515843-4e6a-403a-bf50-05541e2e706b" style="height: 550px;">
   <img src="https://github.com/user-attachments/assets/e9263382-e080-4695-903e-6687a23ff824" style="height: 550px;">
 </div>
+
+[Demo](https://youtu.be/zTV6XjbJvw0)
